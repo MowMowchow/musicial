@@ -1,0 +1,75 @@
+updateUser:
+  handler: bin/updateUser
+  runtime: go1.x
+  timeout: 30
+  package:
+    patterns:
+      - "!./*"
+      - "bin/updateUser"
+
+  events:
+    - http:
+        method: put
+        path: user/add/{user}
+        cors:
+          true
+          # origin: "*"
+          # headers:
+          #   - Content-Type
+          #   - Authorization
+          #   - Access-Control-Allow-Methods
+          #   - Access-Control-Allow-Origin
+          #   - Access-Control-Allow-Headers
+        request:
+          parameters:
+            paths:
+              user: true
+
+  environment:
+    SPOTIFY_CLIENT_ID: "{{resolve:secretsmanager:dev/musicial/spotifyCredentials:SecretString:SPOTIFY_CLIENT_ID}}"
+    SPOTIFY_REDIRECT_URI: "{{resolve:secretsmanager:dev/musicial/spotifyCredentials:SecretString:SPOTIFY_REDIRECT_URI}}"
+    SPOTIFY_CLIENT_SECRET: "{{resolve:secretsmanager:dev/musicial/spotifyCredentials:SecretString:SPOTIFY_CLIENT_SECRET}}"
+    REDIS_CLIENT_ADDRESS: "{{resolve:secretsmanager:dev/musicial/dbCredentials:SecretString:REDIS_CLIENT_ADDRESS}}"
+    NEO4J_CLIENT_ADDRESS: "{{resolve:secretsmanager:dev/musicial/dbCredentials:SecretString:NEO4J_CLIENT_ADDRESS}}"
+    NEO4J_CLIENT_USER: "{{resolve:secretsmanager:dev/musicial/dbCredentials:SecretString:NEO4J_CLIENT_USER}}"
+    NEO4J_CLIENT_PASSWORD: "{{resolve:secretsmanager:dev/musicial/dbCredentials:SecretString:NEO4J_CLIENT_PASSWORD}}"
+
+  role: { "Fn::GetAtt": ["UpdateUserLambdaRole", "Arn"] }
+
+supportingResources:
+  Resources:
+    UpdateUserLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - "lambda.amazonaws.com"
+              Action:
+                - "sts:AssumeRole"
+        Policies:
+          - PolicyName: "UpdateUserLambdaLogPolicy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - "logs:CreateLogGroup"
+                    - "logs:CreateLogStream"
+                    - "logs:PutLogEvents"
+                  Resource:
+                    - "*"
+          - PolicyName: "UpdateUserLambdaEc2Policy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - "ec2:CreateNetworkInterface"
+                    - "ec2:DescribeNetworkInterfaces"
+                    - "ec2:DeleteNetworkInterface"
+                  Resource:
+                    - "*"

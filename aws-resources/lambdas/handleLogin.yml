@@ -1,0 +1,50 @@
+handleLogin:
+  handler: bin/handleLogin
+  runtime: go1.x
+  package:
+    patterns:
+      - "!./*"
+      - "bin/handleLogin"
+
+  events:
+    - http:
+        method: get
+        path: login
+        # cors: true
+        # look into cors
+        # cors: false
+        #   origin:
+        #   headers:
+
+  environment:
+    SPOTIFY_CLIENT_ID: "{{resolve:secretsmanager:dev/musicial/spotifyCredentials:SecretString:SPOTIFY_CLIENT_ID}}"
+    SPOTIFY_REDIRECT_URI: "{{resolve:secretsmanager:dev/musicial/spotifyCredentials:SecretString:SPOTIFY_REDIRECT_URI}}"
+
+  role: { "Fn::GetAtt": ["HandleLoginLambdaRole", "Arn"] }
+
+supportingResources:
+  Resources:
+    HandleLoginLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - "lambda.amazonaws.com"
+              Action:
+                - "sts:AssumeRole"
+        Policies:
+          - PolicyName: "HandleLoginLambdaLogPolicy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - "logs:CreateLogGroup"
+                    - "logs:CreateLogStream"
+                    - "logs:PutLogEvents"
+                  Resource:
+                    - "*"

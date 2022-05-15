@@ -1,16 +1,68 @@
 service: musicial
-# app and org for use with dashboard.serverless.com
-#app: your-app-name
-#org: your-org-name
+
+package:
+  individually: true
+  exclude:
+    - node_modules/**
+    - venv/**
+    - website/web-app-musicial/node_modules/**
+    - website/web-app-musicial/venv/**
+
+plugins:
+  - serverless-domain-manager
+
+configValidationMode: error
 
 provider:
   name: aws
   runtime: go1.x
+  stage: dev
+  region: us-east-1
 
-# you can overwrite defaults here
-#  stage: dev
-#  region: us-east-1
+custom:
+  aliasOriginHostedZoneId: Z05415581P9Z11PATYJI5
+  aliasDestHostedZoneId: Z2FDTNDATAQYW2
+  websiteName: "musicial.net"
+  hostedZoneName: musicial.net
+  aliasDnsName: "d2adrk8w7t8g9x.cloudfront.net"
 
-functions:
+  websiteReRouteName: "www.musicial.net"
+  hostedZoneReRouteName: www.musicial.net
+  aliasReRouteDnsName: "dd0m4mp1hdxvz.cloudfront.net"
+
+  customDomain:
+    domainName: api.musicial.net
+    stage: ${self:provider.stage}
+    basePath: "api"
+    certificateName: api.musicial.net
+    createRoute52Record: true
 
 resources:
+  - ${file(./aws-resources/route53Dns.yml)}
+  - ${file(website/web-app-musicial/web-app-musicial.yml)}
+  - ${file(./aws-resources/buildConfig.yml)}
+  - ${file(./aws-resources/pipelineConfig.yml)}
+
+  # lambda resources - routes
+  - ${file(./aws-resources/lambdas/handleLogin.yml):supportingResources}
+  - ${file(./aws-resources/lambdas/handleRedirect.yml):supportingResources}
+  - ${file(./aws-resources/lambdas/processLogin.yml):supportingResources}
+  - ${file(./aws-resources/lambdas/pollLogin.yml):supportingResources}
+
+  # lambda resources - fetchs
+  - ${file(./aws-resources/lambdas/fetchUsers.yml):supportingResources}
+  - ${file(./aws-resources/lambdas/fetchTracks.yml):supportingResources}
+  - ${file(./aws-resources/lambdas/fetchArtists.yml):supportingResources}
+
+  # other
+  - ${file(./aws-resources/lambdas/updateUser.yml):supportingResources}
+
+functions:
+  - handleLogin: ${file(./aws-resources/lambdas/handleLogin.yml):handleLogin}
+  - handleRedirect: ${file(./aws-resources/lambdas/handleRedirect.yml):handleRedirect}
+  - processLogin: ${file(./aws-resources/lambdas/processLogin.yml):processLogin}
+  - pollLogin: ${file(./aws-resources/lambdas/pollLogin.yml):pollLogin}
+  - updateUser: ${file(./aws-resources/lambdas/updateUser.yml):updateUser}
+  - fetchUsers: ${file(./aws-resources/lambdas/fetchUsers.yml):fetchUsers}
+  - fetchTracks: ${file(./aws-resources/lambdas/fetchTracks.yml):fetchTracks}
+  - fetchArtists: ${file(./aws-resources/lambdas/fetchArtists.yml):fetchArtists}

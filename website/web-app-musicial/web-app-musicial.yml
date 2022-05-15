@@ -1,0 +1,47 @@
+Resources:
+  Website:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: "PublicReadWrite"
+      BucketName: ${self:custom.websiteName}
+      WebsiteConfiguration:
+        IndexDocument: "index.html"
+        ErrorDocument: "index.html"
+
+    DeletionPolicy: "Retain"
+
+  WebsitePolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: PublicReadGetObjects
+            Effect: Allow
+            Principal: "*"
+            Action:
+              - "s3:GetObject"
+            Resource:
+              - "arn:aws:s3:::musicial.net/*" # maybe change this to !GetAtt Website.Arn
+
+      Bucket:
+        Ref: Website
+
+  # Redirect from www.musicial.net to muscial.net
+  WebsiteRedirect:
+    Type: AWS::S3::Bucket
+    Properties:
+      # AccessControl: "PublicReadWrite"
+      BucketName: ${self:custom.websiteReRouteName}
+      WebsiteConfiguration:
+        RedirectAllRequestsTo:
+          HostName: { Ref: Website }
+          Protocol: https
+
+    DeletionPolicy: "Retain"
+
+Outputs:
+  WebsiteUrl:
+    Value: { "Fn::GetAtt": [Website, WebsiteURL] }
+  WebsiteBucket:
+    Value: { Ref: Website }

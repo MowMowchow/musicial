@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@types/react-dom": "^18.0.0",
+    "serverless-domain-manager": "^6.0.2"
+  }
+}

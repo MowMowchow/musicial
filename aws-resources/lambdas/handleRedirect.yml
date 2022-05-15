@@ -1,0 +1,72 @@
+handleRedirect:
+  handler: bin/handleRedirect
+  runtime: go1.x
+  timeout: 6
+  package:
+    patterns:
+      - "!./*"
+      - "bin/handleRedirect"
+
+  events:
+    - http:
+        method: get
+        path: redirect
+        # cors: true
+        #   origin:
+        #   headers:
+
+  environment:
+    SPOTIFY_CLIENT_ID: "{{resolve:secretsmanager:dev/musicial/spotifyCredentials:SecretString:SPOTIFY_CLIENT_ID}}"
+    SPOTIFY_REDIRECT_URI: "{{resolve:secretsmanager:dev/musicial/spotifyCredentials:SecretString:SPOTIFY_REDIRECT_URI}}"
+    SPOTIFY_CLIENT_SECRET: "{{resolve:secretsmanager:dev/musicial/spotifyCredentials:SecretString:SPOTIFY_CLIENT_SECRET}}"
+    REDIS_CLIENT_ADDRESS: "{{resolve:secretsmanager:dev/musicial/dbCredentials:SecretString:REDIS_CLIENT_ADDRESS}}"
+
+  role: { "Fn::GetAtt": ["HandleRedirectLambdaRole", "Arn"] }
+
+supportingResources:
+  Resources:
+    HandleRedirectLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - "lambda.amazonaws.com"
+              Action:
+                - "sts:AssumeRole"
+        Policies:
+          - PolicyName: "HandleRedirectLambdaLogPolicy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - "logs:CreateLogGroup"
+                    - "logs:CreateLogStream"
+                    - "logs:PutLogEvents"
+                  Resource:
+                    - "*"
+          - PolicyName: "HandleRedirectLambdaEc2Policy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - "ec2:CreateNetworkInterface"
+                    - "ec2:DescribeNetworkInterfaces"
+                    - "ec2:DeleteNetworkInterface"
+                  Resource:
+                    - "*"
+          - PolicyName: "HandeRedirectInvokeLambdaPolicy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - "lambda:InvokeAsync"
+                    - "lambda:InvokeFunction"
+                  Resource:
+                    - "*"
