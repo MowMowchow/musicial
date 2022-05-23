@@ -1,5 +1,9 @@
 # Musicial
 
+### \*Currently in the process of requesting an extension from Spotify to avoid having to manually whitelist users to use the application
+
+<br>
+
 Musicial is a full-stack application that allows users to:
 
 - ### Sign in with spotify
