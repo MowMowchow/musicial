@@ -55,4 +55,4 @@ Musicial is a full-stack application that allows users to:
 - Allow users to query for albums
 - Allow users to organize connections into groups
 - Allow users to remove connections
-- Update UI and provide more information for queried items (users, songs, arists, albums)
+- Update UI and provide more information for queried items (users, songs, artists, albums)
